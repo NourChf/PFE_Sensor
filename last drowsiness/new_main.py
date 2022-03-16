@@ -53,7 +53,6 @@ def facial_processing():
     eye_initialized      = False
     mouth_initialized    = False
     normal_initialized   = False
-	
     #get face detector and facial landmark predector
     detector    = dlib.get_frontal_face_detector()
     predictor   = dlib.shape_predictor('/home/pi/shape_predictor_68_face_landmarks.dat')
@@ -107,13 +106,7 @@ def facial_processing():
                 etat = "Eyes not on road"
                 if time.time()- distracton_start_time> DISTRACTION_INTERVAL:
 		   #stores the info into a txt file
-                    with open(r'/home/pi/Desktop/output.txt', "a+") as file_object:
-                        file_object.write(info)
-                        db.collection('drowsiness').document('etat').set(
-                            {
-                                'value' : etat
-                             }
-                        )
+                    print('Current state: '+ etat+'@ '+str(info))
 			
 	    # determine the facial landmarks for the face region, then convert the facial landmark (x, y)-coordinates to a NumPy array
             shape = predictor(gray, rect)
@@ -156,10 +149,10 @@ def facial_processing():
                 if time.time()-eye_start_time >= EYE_DROWSINESS_INTERVAL:
                     cv2.putText(frame, "YOU ARE DROWSY!", (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    #uncomment the three lines below to help check the validity of the program
-                    #dateTimeOBJ=datetime.now()
-                    #eye_info="Date: " + str(dateTimeOBJ) + " Interval: " + str(time.time()-eye_start_time ) + " Drowsy"
-                    #print(eye_info)
+
+                    dateTimeOBJ=datetime.now()
+                    eye_info="Date: " + str(dateTimeOBJ) + " Interval: " + str(time.time()-eye_start_time ) + " Drowsy"
+                    print(eye_info)
 
             else:
                 #measures the duration where the users eyes were drowsy
@@ -172,14 +165,8 @@ def facial_processing():
                     info_eye=info_eye+ "\n"
 		    ##will only store the info if user eyes close/droop for a sufficient amount of time
                     if time.time()-eye_start_time >= EYE_DROWSINESS_INTERVAL:
-			#store info into a txt file
-                        with open(r'/home/pi/Desktop/output.txt', "a+") as file_object:
-                            file_object.write(info_eye)
-                        db.collection('drowsiness').document('etat').set(
-                            {
-                                'value' : "attention !! eyes are closing "
-                            }
-                        )
+                                print("attention !! eyes are closing ")
+                           
 
 
 	    #checks if user is yawning
@@ -192,15 +179,10 @@ def facial_processing():
                 if time.time()-mouth_start_time >= MOUTH_DROWSINESS_INTERVAL:
                     cv2.putText(frame, "YOU ARE YAWNING!", (10, 70),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    #uncomment the lines below to check the validity of this program
-                    #dateTimeOBJ2=datetime.now()
-                    #mouth_info="date: " + str(dateTimeOBJ2) + " Interval: " + str(time.time()-mouth_start_time ) + " Yawning" + " mar " + str(mar)
-                    #print(mouth_info)
-                    db.collection('drowsiness').document('etat').set(
-                        {
-                            'value' : "attention !! yawing"
-                        }
-                    )
+                    dateTimeOBJ2=datetime.now()
+                    mouth_info="date: " + str(dateTimeOBJ2) + " Interval: " + str(time.time()-mouth_start_time ) + " Yawning" + " mar " + str(mar)
+                    print(mouth_info)
+
 
             else:
                 #measures duration of users yawn
@@ -214,8 +196,7 @@ def facial_processing():
 		    #will only store the info if user yawns for a sufficient amount of time
                     if time.time()-mouth_start_time >= MOUTH_DROWSINESS_INTERVAL:
 			#store into into a txt file
-                        with open(r'/home/pi/Desktop/output.txt', "a+") as file_object:
-                            file_object.write(info_mouth)
+                        print('Yawning')
 
 
             #checks if the user is focused
@@ -244,19 +225,7 @@ def facial_processing():
                     info_normal=info_normal+ "\n"
 		    #will only store the info if user is focused for a sufficient amount of time
                     if time.time()-normal_start_time >= NORMAL_INTERVAL:
-                        with open(r'/home/pi/Desktop/output.txt', "a+") as file_object:
-                            file_object.write(info_normal)
-                        db.collection('drowsiness').document('etat').set(
-                            {
-                                'value' : etat
-                             }
-                        )
-                        db.collection('current time').document('time').set(
-                            {
-                                'value' : date
-                             }
-                        )
-
+                        print('etat: '+str(etat)+'@ '+str(date))
                             
 
 
@@ -272,8 +241,7 @@ def facial_processing():
                     info_eye="Date: " + str(dateTime_eye) + ", Interval: " + interval_eye + ", Type:Drowsy"
                     info_eye=info_eye+ "\n"
                     if time.time()-eye_start_time >= EYE_DROWSINESS_INTERVAL:
-                        with open(r'/home/pi/Desktop/output.txt', "a+") as file_object:
-                            file_object.write(info_eye)
+                        print('state: '+str(info_eye))
 
             if not distracton_initialized:
                 distracton_start_time=time.time()
@@ -285,9 +253,9 @@ def facial_processing():
                 cv2.putText(frame, "PLEASE KEEP EYES ON ROAD", (10, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 #uncomment the line below if want to check the validity of the program
-                #dateTimeOBJ3=datetime.now()
-                #DIST_info="date: " + str(dateTimeOBJ3) + " Interval: " + str(time.time()-distracton_start_time) + " EYES NOT ON ROAD"
-                #print(DIST_info)
+                dateTimeOBJ3=datetime.now()
+                DIST_info="date: " + str(dateTimeOBJ3) + " Interval: " + str(time.time()-distracton_start_time) + " EYES NOT ON ROAD"
+                sprint(DIST_info)
 
 	#show the frame
         cv2.imshow("Frame", frame)
