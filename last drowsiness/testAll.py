@@ -6,6 +6,9 @@ import imutils
 import time
 import dlib
 import cv2
+import os 
+from pydub import AudioSegment
+from pydub.playback import play
 from datetime import datetime
 
 #initialize firebase
@@ -16,7 +19,11 @@ from firebase_admin import firestore
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-
+doc_ref = db.collection('etat de chauffeur').document('etat')
+#voice
+file="normal.mp3"
+      
+    
 
 #draw a bounding box over face
 def get_max_area_rect(rects):
@@ -49,6 +56,7 @@ def get_mouth_aspect_ratio(mouth):
 
 # Facial processing
 def facial_processing():
+    message = "normal"  
     distracton_initialized = False
     eye_initialized      = False
     mouth_initialized    = False
@@ -70,6 +78,7 @@ def facial_processing():
     fps_timer=time.time()
     # loop over frames from the video stream
     while True:
+        
         _ , frame=cap.read()
         fps_counter+=1
 	#flip around y-axis
@@ -153,7 +162,13 @@ def facial_processing():
                     dateTimeOBJ=datetime.now()
                     eye_info="Date: " + str(dateTimeOBJ) + " Interval: " + str(time.time()-eye_start_time ) + " Drowsy"
                     print(eye_info)
+                    message="eyes are closing"
+                    doc_ref.set({
 
+                        'value': message
+                    })
+                   # song = AudioSegment.from_mp3("eyes.mp3")
+                    #play(song) 
             else:
                 #measures the duration where the users eyes were drowsy
                 if eye_initialized==True:
@@ -166,6 +181,7 @@ def facial_processing():
 		    ##will only store the info if user eyes close/droop for a sufficient amount of time
                     if time.time()-eye_start_time >= EYE_DROWSINESS_INTERVAL:
                                 print("attention !! eyes are closing ")
+
                            
 
 
@@ -182,6 +198,13 @@ def facial_processing():
                     dateTimeOBJ2=datetime.now()
                     mouth_info="date: " + str(dateTimeOBJ2) + " Interval: " + str(time.time()-mouth_start_time ) + " Yawning" + " mar " + str(mar)
                     print(mouth_info)
+                    message="yawning"
+                    doc_ref.set({
+
+                        'value': message 
+
+                    })
+                
 
 
             else:
@@ -197,7 +220,7 @@ def facial_processing():
                     if time.time()-mouth_start_time >= MOUTH_DROWSINESS_INTERVAL:
 			#store into into a txt file
                         print('Yawning')
-
+                        
 
             #checks if the user is focused
             if (eye_initialized==False) & (mouth_initialized==False) & (distracton_initialized==False):
@@ -211,7 +234,11 @@ def facial_processing():
                         cv2.putText(frame, "Normal!", (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                         print('Normal')
-                     
+                        message="normal"
+                        doc_ref.set({
+
+                            'value': message
+                        })
 
             else:
                 if normal_initialized==True:
@@ -226,8 +253,10 @@ def facial_processing():
 		    #will only store the info if user is focused for a sufficient amount of time
                     if time.time()-normal_start_time >= NORMAL_INTERVAL:
                         print('etat: '+str(etat)+'@ '+str(date))
-                            
+                     
 
+                                       
+            
 
 	#if the user's face is not focused on the road, the eyes/mouth features cannot be computed
         else:
@@ -256,7 +285,16 @@ def facial_processing():
                 dateTimeOBJ3=datetime.now()
                 DIST_info="date: " + str(dateTimeOBJ3) + " Interval: " + str(time.time()-distracton_start_time) + " EYES NOT ON ROAD"
                 print(DIST_info)
+                message="eyes are not on the road"
 
+                doc_ref.set({
+
+                    'value': message 
+
+                })
+        if message=="yawning":
+            os.system("mpg123 " + file)
+            time.sleep(4)
 	#show the frame
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(5)&0xFF
@@ -264,11 +302,13 @@ def facial_processing():
 	# if the `q` key was pressed, break from the loop
         if key == ord("q"):
             break
-	
     # close all windows and release the capture
+   
     cv2.destroyAllWindows()
     cap.release()
 
 
 if __name__=='__main__':
 	facial_processing()
+	
+

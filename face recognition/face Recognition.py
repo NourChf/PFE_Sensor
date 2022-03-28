@@ -4,12 +4,13 @@ import numpy as np
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-
+from time import time, ctime
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 doc_ref = db.collection('faces').document('id')
+dos_ref = db.collection('faces').document('time')
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
 
@@ -18,24 +19,18 @@ nour_image = face_recognition.load_image_file("nour.jpg")
 nour_face_encoding = face_recognition.face_encodings(nour_image)[0]
 
 # Load a second sample picture and learn how to recognize it.
-biden_image = face_recognition.load_image_file("biden.jpg")
-biden_face_encoding = face_recognition.face_encodings(biden_image)[0]
+mortadha_image = face_recognition.load_image_file("mortadha.jpg")
+mortadha_face_encoding = face_recognition.face_encodings(mortadha_image)[0]
 
-# Load a second sample picture and learn how to recognize it.
-
-malik_image = face_recognition.load_image_file("zaynMalik.jpg")
-malik_face_encoding = face_recognition.face_encodings(malik_image)[0]
 
 # Create arrays of known face encodings and their names
 known_face_encodings = [
     nour_face_encoding,
-    biden_face_encoding,
-    malik_face_encoding
+    mortadha_face_encoding
 ]
 known_face_names = [
-    "Nour Cherif",
-    "Joe Biden",
-    "Zayn Malik"
+    "nour : 111222333",
+    "mortadha : 444555666 "
 ]
 
 # Initialize some variables
@@ -78,9 +73,17 @@ while True:
                 name = known_face_names[best_match_index]
 
             face_names.append(name)
+            t=time()
+            
             doc_ref.set({
 
-            'value': name
+            'value': name 
+
+            })
+            dos_ref.set({
+
+            
+            'temp' : ctime(t)
 
             })
 
